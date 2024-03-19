@@ -99,7 +99,7 @@ fi
 
 ns_args=()
 if [ "$user" != "root" ]; then
-    ns_args=("--userns=keep-id")
+    ns_args=("--userns=keep-id:uid=1000,gid=1000")
 fi
 
 # Run the recursion.
