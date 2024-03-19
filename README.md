@@ -7,4 +7,4 @@ So far we only worked with `podman` because it provides better feature and secur
 
 ## Podman Nesting
 
-See [docs/podman/README.md](docs/podman/README.md).
+See [src/podman/README.md](src/podman/README.md).

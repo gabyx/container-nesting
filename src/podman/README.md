@@ -16,6 +16,12 @@ containers. You can also use the `alpine` image with:
 just run "custom" "root"
 ```
 
+To start a bash after entering and after leaving the containers use:
+
+```shell
+just run "custom" "root" "true"
+```
+
 Its just too cool that this works? 🤣
 
 ## Running as Non-Root

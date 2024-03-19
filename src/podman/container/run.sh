@@ -69,7 +69,7 @@ function main() {
             -v "$vol_name:/podman-root:Z" \
             -v "/var/lib/shared:/var/lib/shared" \
             --rm ttl.sh/podman-test \
-            ./run.sh "$((level + 1))" "$user" || true
+            ./run.sh "$((level + 1))" "$user" "$with_tty" || true
 
         echo
 
@@ -87,9 +87,10 @@ function main() {
 
 level="$1"
 user="${2:-root}"
+with_tty="${3:-false}"
+
 vol_name="podman-root-$level"
 msg="-> $level. Container"
-with_tty="false"
 
 tty_args=()
 if with_tty; then

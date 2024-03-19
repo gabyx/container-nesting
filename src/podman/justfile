@@ -2,6 +2,6 @@ set positional-arguments
 set shell := ["bash", "-cue"]
 root_dir := justfile_directory()
 
-run target="original" user="root":
+run target="original" user="root" with_tty="false":
     cd "{{root_dir}}" && \
-        ./start-run.sh "{{target}}" "{{user}}"
+        ./start-run.sh "{{target}}" "{{user}}" "{{with_tty}}"
