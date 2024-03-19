@@ -1,0 +1,7 @@
+set positional-arguments
+set shell := ["bash", "-cue"]
+root_dir := justfile_directory()
+
+run target="original" user="root":
+    cd "{{root_dir}}" && \
+        ./start-run.sh "{{target}}" "{{user}}"
