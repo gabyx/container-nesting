@@ -10,14 +10,19 @@ function indent() {
     cat | sed "s@^@| @g"
 }
 
+function modify_storage_conf() {
+    mkdir -p "$HOME/.config/containers"
+
+    sed /etc/containers/storage.conf -E \
+        -e 's|^#?\s*graphroot.*|graphroot = "/podman-root/root"|g' \
+        -e 's|^#?\s*runroot.*|runroot = "/podman-root/runroot"|g' >~/.config/containers/storage.conf
+
+    # Make it usable everywhere.
+    export CONTAINERS_STORAGE_CONF="$HOME/.config/containers/storage.conf"
+}
+
 function run_podman() {
-    # When you specify `--root` , than `storage-opts`
-    # in `/etc/containers/storage.conf` are ignored.
-    podman \
-        --root /podman-root/root \
-        --runroot /podman-root/runroot \
-        --storage-opt "additionalimagestore=/var/lib/shared" \
-        "$@"
+    podman "$@"
 }
 
 function with_tty() {
@@ -31,6 +36,12 @@ function main() {
         echo "Bash when entering container:"
         bash
     fi
+
+    # When you specify `--root` , than `storage-opts`
+    # in `/etc/containers/storage.conf` are ignored.
+    # Therefore we set a new `storage.conf` file with adapted
+    # `graphroot` and `runroot` values.
+    modify_storage_conf
 
     # Run the image and build again.
     if [ "$level" -lt 5 ]; then
