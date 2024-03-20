@@ -43,7 +43,7 @@
       system: legacyPkgs: let
         # Import nixpkgs and load it into pkgs.
         pkgs = import nixpkgs {
-          inherit system overlays;
+          inherit system;
         };
 
         # Things needed only at compile-time.
