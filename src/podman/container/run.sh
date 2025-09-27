@@ -4,7 +4,11 @@ set -u
 set -e
 
 DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+. "$DIR/general.sh"
+
 cd "$DIR" || exit 1
+
+MAX_RECURSION=2
 
 function indent() {
     cat | sed "s@^@| @g"
@@ -31,9 +35,9 @@ function with_tty() {
 
 function main() {
     # Build the image.
-    echo "$msg: inside [version: $(cat /image.version)]"
+    log::info "$msg: inside [version: $(cat /image.version)]"
     if with_tty; then
-        echo "Bash when entering container:"
+        log::info "Bash when entering container:"
         bash
     fi
 
@@ -44,16 +48,14 @@ function main() {
     modify_storage_conf
 
     # Run the image and build again.
-    if [ "$level" -lt 5 ]; then
-        echo "$msg: Launching a new container ..."
+    if [ "$level" -lt $MAX_RECURSION ]; then
+        log::info "$msg: Launching a new container ..."
 
         # We need to make a new volume for the next podman
         # to have the stuff it needs separated.
-        echo "$msg: create volume:"
-        run_podman volume create "$vol_name" || {
-            echo "create failed: $vol_name"
-            exit 3
-        }
+        log::info "$msg: create volume:"
+        run_podman volume create "$vol_name" ||
+            die "create failed: $vol_name"
 
         # We launch the new podman with root/runroot
         # on the current mounted volume `data`.
@@ -61,23 +63,28 @@ function main() {
         # [`additionalimages`](https://www.redhat.com/sysadmin/image-stores-podman)
         # to next podman to have caching.
 
-        echo "$msg: Simple container run test:"
+        log::info "$msg: Simple container run test:"
         run_podman run \
             --privileged \
             "${tty_args[@]}" \
-            "${ns_args[@]}" \
+            "${rootless_args[@]}" \
             ttl.sh/podman-test \
             head -1 /etc/os-release
 
-        echo "$msg: Start new container:"
+        if with_tty; then
+            log::info "Bash after nested simple container run"
+            bash
+        fi
+
+        log::info "$msg: Start new container:"
 
         echo
         run_podman \
             run \
             --privileged \
             "${tty_args[@]}" \
-            "${ns_args[@]}" \
-            -v "$vol_name:/podman-root:Z" \
+            "${rootless_args[@]}" \
+            -v "$vol_name:/podman-root" \
             -v "/var/lib/shared:/var/lib/shared" \
             --rm ttl.sh/podman-test \
             ./run.sh "$((level + 1))" "$user" "$with_tty" || true
@@ -85,15 +92,15 @@ function main() {
         echo
 
         if with_tty; then
-            echo "Bash after container:"
+            log::info "Bash after container:"
             bash
         fi
 
     else
-        echo "$msg: Finally reached container level: $level"
+        log::info "$msg: Finally reached container level: $level"
     fi
 
-    echo "$msg: leaving"
+    log::info "$msg: leaving"
 }
 
 level="$1"
@@ -101,16 +108,19 @@ user="${2:-root}"
 with_tty="${3:-false}"
 
 vol_name="podman-root-$level"
-msg="-> $level. Container"
+msg="$level. Container"
 
 tty_args=()
 if with_tty; then
     tty_args=(-it)
 fi
 
-ns_args=()
+rootless_args=()
 if [ "$user" != "root" ]; then
-    ns_args=("--userns=keep-id:uid=1000,gid=1000")
+    rootless_args=(
+        "--userns=keep-id:uid=1000,gid=1000"
+        "--device" "/dev/fuse:rw"
+    )
 fi
 
 # Run the recursion.

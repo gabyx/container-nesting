@@ -4,6 +4,8 @@
 set -eu
 
 DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+. "$DIR/container/general.sh"
+
 cd "$DIR" || exit 1
 
 name="ttl.sh/podman-test"
@@ -19,26 +21,32 @@ podman build \
 
 podman push "$name"
 
-echo "Run as user: $user"
-ns_args=()
-[ "$user" = "root" ] || ns_args=("--userns=keep-id:uid=1000,gid=1000")
+log::info "Run as user: $user"
+rootless_args=()
+if [ "$user" != "root" ]; then
+    rootless_args=(
+        "--userns=keep-id:uid=1000,gid=1000"
+        "--device" "/dev/fuse:rw"
+    )
+fi
 
+log::info "Creating 'podman-root' volume"
 podman volume rm podman-root &&
     podman volume create podman-root || true
 
-echo " ==========================================================="
-echo " ==========================================================="
-echo " ==================== Start Recursion ======================"
-echo " ==========================================================="
-echo " ==========================================================="
+log::info " ==========================================================="
+log::info " ==========================================================="
+log::info " ==================== Start Recursion ======================"
+log::info " ==========================================================="
+log::info " ==========================================================="
 
 podman run \
     --privileged \
-    "${ns_args[@]}" \
-    --device /dev/fuse \
+    "${rootless_args[@]}" \
     -v "podman-root:/podman-root" \
-    -v "$HOME/.local/share/containers/storage:/var/lib/shared" \
     --rm \
     -it \
     "$name" \
     ./run.sh 1 "$user" "$with_tty"
+
+# -v "$HOME/.local/share/containers/storage:/var/lib/shared" \
