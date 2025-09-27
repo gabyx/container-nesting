@@ -16,6 +16,7 @@ with_tty="$3"
 podman build \
     -f container/Containerfile \
     -t "$name" \
+    -t "ttl.sh/podman-$target" \
     --target "$target" \
     ./container
 

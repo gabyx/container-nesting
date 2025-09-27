@@ -1,7 +1,10 @@
 # Nesting Containers with Podman
 
-The following expects that the container runtime `podman` is run as non-root
-user on your system.
+> [!NOTE]
+>
+> The following expects that the container runtime `podman` is run as non-root
+> user on your system. When you are logged in as `non-root` this is normally the
+> case. As `podman` does not run as root by default.
 
 ## What are Rootless Containers
 
@@ -103,11 +106,17 @@ then on the host (where you ran `just run "custom" "podman" true`) you start a
 new container in the terminal:
 
 ```shell
-podman run -it --rm -v podman-root:/run/podman ttl.sh/podman-test \
+podman run -it --rm -v podman-root:/run/podman podman-custom \
   podman --url unix:///run/podman/podman.sock info
 
 # or run a container directly.
 
-podman run -it --rm -v podman-root:/run/podman ttl.sh/podman-test \
+podman run -it --rm -v podman-root:/run/podman podman-custom \
   podman --url unix:///run/podman/podman.sock run -it alpine
 ```
+
+## Links
+
+- [~/.config/containers/containers.conf](https://github.com/containers/common/blob/main/docs/containers.conf.5.md)
+
+- [~/.config/containers/storage.conf](https://github.com/containers/storage/blob/main/docs/containers-storage.conf.5.md)

@@ -5,7 +5,7 @@
 # Original podman image.
 # =====================================================
 FROM quay.io/podman/stable as original
-COPY ./Containerfile ./run.sh /home/podman/
+COPY ./Containerfile ./run.sh ./general.sh /home/podman/
 RUN chmod +x /home/podman/*.sh
 
 # Missing storage.conf for podman user.
@@ -18,14 +18,14 @@ WORKDIR /home/podman
 # Pipglr Image
 # =====================================================
 FROM registry.gitlab.com/qontainers/pipglr:latest as custom-pipglr
-COPY ./Containerfile ./run.sh /home/podman/
+COPY ./Containerfile ./run.sh ./general.sh /home/podman/
 RUN chmod +x /home/podman/*.sh
 WORKDIR /home/podman
 ENTRYPOINT []
 CMD bash
 
 FROM registry.gitlab.com/qontainers/pipglr:latest-alpine as custom-pipglr-alpine
-COPY ./Containerfile ./run.sh /home/podman/
+COPY ./Containerfile ./run.sh ./general.sh /home/podman/
 RUN chmod +x /home/podman/*.sh
 WORKDIR /home/podman
 ENTRYPOINT []
